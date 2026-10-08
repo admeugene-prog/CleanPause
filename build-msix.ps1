@@ -1,9 +1,9 @@
 param(
     [switch] $SkipAppBuild,
     [string] $Version = '1.0.1',
-    [string] $IdentityName = 'CleanPause.Preview',
-    [string] $Publisher = 'CN=CleanPause Preview',
-    [string] $PublisherDisplayName = 'CleanPause'
+    [string] $IdentityName = 'EvgeniiALEKSEEV.CleanPause',
+    [string] $Publisher = 'CN=6E79EBE5-4570-4408-87D0-17F295D9EA33',
+    [string] $PublisherDisplayName = 'Evgenii ALEKSEEV'
 )
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot

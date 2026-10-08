@@ -14,9 +14,9 @@ the Microsoft Store. This is not a Store-certified release.
 
 Register your application first. Copy the exact Package/Identity/Name,
 Package/Identity/Publisher and publisher display name from Partner Center's
-app identity page. The preview identity is not a substitute for those values.
+app identity page. The default identity now matches the CleanPause Partner Center listing: EvgeniiALEKSEEV.CleanPause, publisher CN=6E79EBE5-4570-4408-87D0-17F295D9EA33, display name Evgenii ALEKSEEV.
 
-Set these repository **Actions variables** (not secrets):
+Optional overrides use these repository **Actions variables** (not secrets):
 
 - `STORE_IDENTITY_NAME`
 - `STORE_PUBLISHER`

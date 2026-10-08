@@ -105,7 +105,7 @@ jobs:
             'Download CleanPause-Setup.exe to install, or CleanPause.exe for the standalone application. SHA256SUMS.txt contains checksums; compare them with Get-FileHash -Algorithm SHA256 in PowerShell.',
             '',
             'These binaries are unsigned. A successful Actions build does not guarantee antivirus acceptance.',
-            'CleanPause.msix is an unsigned preview package. It requires the Partner Center identity before Store submission, approval of allowElevation, and testing of elevation, input recovery, and startup. It is not a Microsoft Store certified release and cannot be installed normally by double-clicking while unsigned.',
+            'CleanPause.msix is an unsigned preview package. It uses the CleanPause Partner Center identity; Store submission still requires approval of allowElevation and testing of elevation, input recovery, and startup. It is not a Microsoft Store certified release and cannot be installed normally by double-clicking while unsigned.',
             '',
             '## Русский',
             '',
@@ -117,7 +117,7 @@ jobs:
             'Для установки скачайте CleanPause-Setup.exe; для отдельного запуска — CleanPause.exe. Контрольные суммы находятся в SHA256SUMS.txt; проверить файл можно командой Get-FileHash -Algorithm SHA256 в PowerShell.',
             '',
             'Файлы не подписаны. Успешная сборка Actions не гарантирует отсутствие срабатываний антивируса.',
-            'CleanPause.msix — неподписанный предварительный пакет. Для Store нужны Identity из Partner Center, согласование allowElevation и проверка повышения прав, восстановления ввода и автозапуска. Пакет ещё не прошёл сертификацию Store; без подписи обычная установка двойным щелчком недоступна.'
+            'CleanPause.msix — неподписанный предварительный пакет. Identity соответствует карточке CleanPause в Partner Center; для Store ещё нужны согласование allowElevation и проверка повышения прав, восстановления ввода и автозапуска. Пакет ещё не прошёл сертификацию Store; без подписи обычная установка двойным щелчком недоступна.'
           )
           $notes | Set-Content -LiteralPath release-notes.md -Encoding utf8
           gh release view $tag --json tagName *> $null
