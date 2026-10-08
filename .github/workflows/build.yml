@@ -80,10 +80,39 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           $tag = $env:GITHUB_REF_NAME
+          $runUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          $sourceUrl = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/tree/$env:GITHUB_SHA"
+          $notes = @(
+            '## English',
+            '',
+            'Windows x64 application and per-user installer. All attached files were built and uploaded by GitHub Actions from the tagged source; no locally built binaries were uploaded.',
+            '',
+            "Build log: $runUrl",
+            "Source commit: $sourceUrl",
+            '',
+            'Download CleanPause-Setup.exe to install, or CleanPause.exe for the standalone application. SHA256SUMS.txt contains checksums; compare them with Get-FileHash -Algorithm SHA256 in PowerShell.',
+            '',
+            'These binaries are unsigned. A successful Actions build does not guarantee antivirus acceptance.',
+            '',
+            '## Русский',
+            '',
+            'Приложение Windows x64 и установщик для текущего пользователя. Все приложенные файлы собраны и опубликованы GitHub Actions из исходников тега; локальные сборки не загружались.',
+            '',
+            "Журнал сборки: $runUrl",
+            "Исходный коммит: $sourceUrl",
+            '',
+            'Для установки скачайте CleanPause-Setup.exe; для отдельного запуска — CleanPause.exe. Контрольные суммы находятся в SHA256SUMS.txt; проверить файл можно командой Get-FileHash -Algorithm SHA256 в PowerShell.',
+            '',
+            'Файлы не подписаны. Успешная сборка Actions не гарантирует отсутствие срабатываний антивируса.'
+          )
+          $notes | Set-Content -LiteralPath release-notes.md -Encoding utf8
           gh release view $tag --json tagName *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag --verify-tag --title "CleanPause $tag" --notes 'Windows x64 build. These CI binaries are unsigned. / Сборка Windows x64. Файлы CI не подписаны.'
+            gh release create $tag --verify-tag --title "CleanPause $tag" --notes-file release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
+          } else {
+            gh release edit $tag --notes-file release-notes.md
+            if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed.' }
           }
           gh release upload $tag dist/CleanPause.exe dist/CleanPause-Setup.exe dist/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }
