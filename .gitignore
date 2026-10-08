@@ -1,0 +1,11 @@
+/dist/
+/tests/ui-config.json
+/tests/cleanpause.log
+*.tmp
+*.key
+*.pfx
+*.p12
+*.dpapi
+/signing-issuance.log
+*.syso
+*.log
