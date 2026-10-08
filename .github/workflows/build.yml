@@ -44,9 +44,20 @@ jobs:
         run: ./build.ps1
       - name: Build unsigned installer
         run: ./build-installer.ps1 -SkipAppBuild -Unsigned -Version $env:BUILD_VERSION
+      - name: Build unsigned MSIX
+        env:
+          STORE_IDENTITY_NAME: ${{ vars.STORE_IDENTITY_NAME }}
+          STORE_PUBLISHER: ${{ vars.STORE_PUBLISHER }}
+          STORE_PUBLISHER_DISPLAY_NAME: ${{ vars.STORE_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          $options = @{}
+          if ($env:STORE_IDENTITY_NAME) { $options.IdentityName = $env:STORE_IDENTITY_NAME }
+          if ($env:STORE_PUBLISHER) { $options.Publisher = $env:STORE_PUBLISHER }
+          if ($env:STORE_PUBLISHER_DISPLAY_NAME) { $options.PublisherDisplayName = $env:STORE_PUBLISHER_DISPLAY_NAME }
+          ./build-msix.ps1 -SkipAppBuild -Version $env:BUILD_VERSION @options
       - name: Create SHA256 checksums
         run: |
-          $lines = @('dist/CleanPause.exe', 'dist/CleanPause-Setup.exe') | ForEach-Object {
+          $lines = @('dist/CleanPause.exe', 'dist/CleanPause-Setup.exe', 'dist/CleanPause.msix') | ForEach-Object {
             $hash = Get-FileHash -LiteralPath $_ -Algorithm SHA256
             '{0}  {1}' -f $hash.Hash.ToLowerInvariant(), (Split-Path $_ -Leaf)
           }
@@ -57,6 +68,7 @@ jobs:
           path: |
             dist/CleanPause.exe
             dist/CleanPause-Setup.exe
+            dist/CleanPause.msix
             dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 7
@@ -93,6 +105,7 @@ jobs:
             'Download CleanPause-Setup.exe to install, or CleanPause.exe for the standalone application. SHA256SUMS.txt contains checksums; compare them with Get-FileHash -Algorithm SHA256 in PowerShell.',
             '',
             'These binaries are unsigned. A successful Actions build does not guarantee antivirus acceptance.',
+            'CleanPause.msix is an unsigned preview package. It requires the Partner Center identity before Store submission, approval of allowElevation, and testing of elevation, input recovery, and startup. It is not a Microsoft Store certified release and cannot be installed normally by double-clicking while unsigned.',
             '',
             '## Русский',
             '',
@@ -103,7 +116,8 @@ jobs:
             '',
             'Для установки скачайте CleanPause-Setup.exe; для отдельного запуска — CleanPause.exe. Контрольные суммы находятся в SHA256SUMS.txt; проверить файл можно командой Get-FileHash -Algorithm SHA256 в PowerShell.',
             '',
-            'Файлы не подписаны. Успешная сборка Actions не гарантирует отсутствие срабатываний антивируса.'
+            'Файлы не подписаны. Успешная сборка Actions не гарантирует отсутствие срабатываний антивируса.',
+            'CleanPause.msix — неподписанный предварительный пакет. Для Store нужны Identity из Partner Center, согласование allowElevation и проверка повышения прав, восстановления ввода и автозапуска. Пакет ещё не прошёл сертификацию Store; без подписи обычная установка двойным щелчком недоступна.'
           )
           $notes | Set-Content -LiteralPath release-notes.md -Encoding utf8
           gh release view $tag --json tagName *> $null
@@ -114,5 +128,5 @@ jobs:
             gh release edit $tag --notes-file release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed.' }
           }
-          gh release upload $tag dist/CleanPause.exe dist/CleanPause-Setup.exe dist/SHA256SUMS.txt --clobber
+          gh release upload $tag dist/CleanPause.exe dist/CleanPause-Setup.exe dist/CleanPause.msix dist/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }

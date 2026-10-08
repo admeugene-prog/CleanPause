@@ -6,6 +6,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"image"
+	"image/color"
+	"image/png"
 	"os"
 )
 
@@ -64,6 +67,19 @@ func main() {
 	ico = append(ico, bmp...)
 	os.MkdirAll("assets/icons", 0755)
 	must(os.WriteFile("assets/icons/cleanpause.ico", ico, 0644))
+	// Store tiles use the same generated keyboard icon as the executable.
+	for name, size := range map[string]int{"Square44x44Logo": 44, "Square150x150Logo": 150, "StoreLogo": 50} {
+		img := image.NewNRGBA(image.Rect(0, 0, size, size))
+		for y := 0; y < size; y++ {
+			for x := 0; x < size; x++ {
+				i := 40 + ((31-y*32/size)*32+x*32/size)*4
+				img.SetNRGBA(x, y, color.NRGBA{bmp[i+2], bmp[i+1], bmp[i], 255})
+			}
+		}
+		var encoded bytes.Buffer
+		must(png.Encode(&encoded, img))
+		must(os.WriteFile("assets/icons/"+name+".png", encoded.Bytes(), 0644))
+	}
 	blobs := [][]byte{bmp, group, manifest}
 	types := []uint32{3, 14, 24}
 	// Resource hierarchy: type -> integer ID 1 -> language 1033 -> data entry.

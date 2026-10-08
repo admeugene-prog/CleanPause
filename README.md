@@ -1,5 +1,7 @@
 # CleanPause
 
+MSIX preview packaging is available: `./build-msix.ps1`. See [MSIX setup and Store requirements](msix/README.md). Actions builds include the unsigned preview package; Store identity and capability approval are still required.
+
 [English](README.md) · [Русский](README.ru.md)
 
 CleanPause is a Windows tray app that reminds you to clean your keyboard and

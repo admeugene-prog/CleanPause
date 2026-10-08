@@ -5,6 +5,7 @@ import (
 	"cleanpause/internal/app"
 	"cleanpause/internal/config"
 	"cleanpause/internal/input"
+	"cleanpause/internal/platform"
 	"cleanpause/internal/scheduler"
 	"fmt"
 	"log/slog"
@@ -551,7 +552,15 @@ func (w *window) show(screen string) {
 	case "settings":
 		w.button("Расписание", 5, 30, 108, 245)
 		w.button("Настройки", 6, 295, 108, 245)
-		w.check(assets.Text("autostart"), 30, 30, 175, 510, w.cfg.Autostart)
+		if platform.IsPackaged {
+			text := "Автозапуск: управление в настройках Windows"
+			if assets.Language() == "en" {
+				text = "Startup: managed in Windows Settings"
+			}
+			w.label(text, 30, 30, 175, 510, 30, 0)
+		} else {
+			w.check(assets.Text("autostart"), 30, 30, 175, 510, w.cfg.Autostart)
+		}
 		w.check(assets.Text("notify"), 31, 30, 215, 510, w.cfg.Notify)
 		w.label(assets.Text("duration"), 102, 30, 267, 300, 26, 0)
 		items := []string{}
@@ -833,6 +842,9 @@ func (w *window) saveQuiet() {
 	}
 }
 func (w *window) setAutostart(on bool) error {
+	if platform.IsPackaged {
+		return nil // MSIX StartupTask is controlled by Windows, not HKCU Run.
+	}
 	exe, e := os.Executable()
 	if e != nil {
 		return e

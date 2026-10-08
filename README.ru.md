@@ -1,5 +1,7 @@
 # CleanPause
 
+Добавлена предварительная упаковка MSIX: `./build-msix.ps1`. [Настройка MSIX и требования Store](msix/README.md). Пакет входит в сборки Actions; для Store ещё нужны Identity из Partner Center и согласование возможностей.
+
 [English](README.md) · [Русский](README.ru.md)
 
 CleanPause — приложение для Windows, которое напоминает о чистке клавиатуры и
