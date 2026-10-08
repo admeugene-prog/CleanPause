@@ -118,3 +118,11 @@ monitors still require manual validation on target Windows systems.
 ## License
 
 [MIT](LICENSE). Original mockups: `mockups/`. [Original specification](CleanPause_TZ.md).
+
+## Automated builds
+
+[GitHub Actions](https://github.com/admeugene-prog/CleanPause/actions) tests and builds Windows x64 on pushes to `main`, pull requests, and manual **Run workflow** requests. Download `CleanPause-windows-x64` from a successful run; artifacts are retained for 7 days.
+
+Push a tag such as `v1.0.1` to build and publish `CleanPause.exe`, `CleanPause-Setup.exe`, and `SHA256SUMS.txt` in a GitHub Release. Installer versions follow the tag; release tags must use `vMAJOR.MINOR.PATCH`.
+
+CI binaries are **unsigned**. Private certificates are not uploaded to GitHub. Local signed builds remain available with `./build-installer.ps1`; use `./build-installer.ps1 -Unsigned -Version 1.0.1` to reproduce CI packaging.

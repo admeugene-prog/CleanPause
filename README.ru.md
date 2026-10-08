@@ -119,3 +119,11 @@ go test ./...           # Включает 60-секундную симуляц�
 ## Лицензия
 
 [MIT](LICENSE). Исходные макеты — `mockups/`. [Техническое задание](CleanPause_TZ.md).
+
+## Автоматическая сборка
+
+[GitHub Actions](https://github.com/admeugene-prog/CleanPause/actions) проверяет и собирает Windows x64 при изменениях в `main`, pull request и ручном запуске **Run workflow**. В успешном запуске скачайте `CleanPause-windows-x64`; артефакты хранятся 7 дней.
+
+Отправка тега, например `v1.0.1`, автоматически создаёт Release с `CleanPause.exe`, `CleanPause-Setup.exe` и `SHA256SUMS.txt`. Версия установщика берётся из тега; формат тега — `vMAJOR.MINOR.PATCH`.
+
+Файлы CI **не подписаны**. Закрытые сертификаты в GitHub не загружаются. Локальная подписанная сборка: `./build-installer.ps1`. Сборка как в CI: `./build-installer.ps1 -Unsigned -Version 1.0.1`.

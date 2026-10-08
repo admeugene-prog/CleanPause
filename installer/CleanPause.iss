@@ -1,5 +1,7 @@
 #define AppName "CleanPause"
+#ifndef AppVersion
 #define AppVersion "1.0.0"
+#endif
 
 [Setup]
 AppId={{6EAD64D5-5DDC-4B7D-94FB-0C2A0361292B}
@@ -24,9 +26,11 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 LanguageDetectionMethod=uilanguage
+#ifndef UnsignedBuild
 SignTool=cleanpause
 SignedUninstaller=yes
 SignToolRunMinimized=yes
+#endif
 CloseApplications=no
 RestartApplications=no
 

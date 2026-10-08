@@ -1,0 +1,89 @@
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Select installer version
+        run: |
+          $version = '1.0.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            if ($env:GITHUB_REF_NAME -notmatch '^v(\d+\.\d+\.\d+)$') {
+              throw 'Release tag must have the format v1.2.3.'
+            }
+            $version = $Matches[1]
+          }
+          "BUILD_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Test, vet, and build application
+        run: ./build.ps1
+      - name: Build unsigned installer
+        run: ./build-installer.ps1 -SkipAppBuild -Unsigned -Version $env:BUILD_VERSION
+      - name: Create SHA256 checksums
+        run: |
+          $lines = @('dist/CleanPause.exe', 'dist/CleanPause-Setup.exe') | ForEach-Object {
+            $hash = Get-FileHash -LiteralPath $_ -Algorithm SHA256
+            '{0}  {1}' -f $hash.Hash.ToLowerInvariant(), (Split-Path $_ -Leaf)
+          }
+          $lines | Set-Content -LiteralPath dist/SHA256SUMS.txt -Encoding ascii
+      - uses: actions/upload-artifact@v6
+        with:
+          name: CleanPause-windows-x64
+          path: |
+            dist/CleanPause.exe
+            dist/CleanPause-Setup.exe
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: CleanPause-windows-x64
+          path: dist
+      - name: Publish release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          gh release view $tag --json tagName *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --verify-tag --title "CleanPause $tag" --notes 'Windows x64 build. These CI binaries are unsigned. / Сборка Windows x64. Файлы CI не подписаны.'
+            if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
+          }
+          gh release upload $tag dist/CleanPause.exe dist/CleanPause-Setup.exe dist/SHA256SUMS.txt --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }

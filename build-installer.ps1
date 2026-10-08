@@ -1,10 +1,11 @@
-param([switch] $SkipAppBuild)
+param([switch] $SkipAppBuild, [switch] $Unsigned, [string] $Version = '1.0.0')
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-if (-not $SkipAppBuild) { & "$PSScriptRoot\build.ps1" -Sign }
+if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Version must have the format 1.2.3.' }
+if (-not $SkipAppBuild) { & "$PSScriptRoot\build.ps1" -Sign:(-not $Unsigned) }
 $exe = Join-Path $PSScriptRoot 'dist\CleanPause.exe'
 if (-not (Test-Path -LiteralPath $exe) -or (Get-Item -LiteralPath $exe).Length -eq 0) { throw 'Build the application first.' }
-if (-not (Get-AuthenticodeSignature -LiteralPath $exe).SignerCertificate) { throw 'Application must be signed before packaging.' }
+if (-not $Unsigned -and -not (Get-AuthenticodeSignature -LiteralPath $exe).SignerCertificate) { throw 'Application must be signed before packaging.' }
 $compilerDir = Join-Path $env:LOCALAPPDATA 'CleanPauseBuildTools\InnoSetup-6.7.3'
 $compiler = Join-Path $compilerDir 'ISCC.exe'
 if (-not (Test-Path -LiteralPath $compiler)) {
@@ -21,8 +22,10 @@ if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler missin
 $shellExe = (Get-Process -Id $PID).Path
 $signScript = Join-Path $PSScriptRoot 'tools\Sign-Executable.ps1'
 $signCommand = '/Scleanpause=$q' + $shellExe + '$q -NoProfile -NonInteractive -File $q' + $signScript + '$q -Path $f'
-& $compiler $signCommand (Join-Path $PSScriptRoot 'installer\CleanPause.iss')
+$compilerArgs = @("/DAppVersion=$Version")
+if ($Unsigned) { $compilerArgs += '/DUnsignedBuild' } else { $compilerArgs += $signCommand }
+& $compiler @compilerArgs (Join-Path $PSScriptRoot 'installer\CleanPause.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed.' }
 $setup = Join-Path $PSScriptRoot 'dist\CleanPause-Setup.exe'
-if (-not (Get-AuthenticodeSignature -LiteralPath $setup).SignerCertificate) { throw 'Installer signature missing.' }
-Write-Host "Built and signed: $setup"
+if (-not $Unsigned -and -not (Get-AuthenticodeSignature -LiteralPath $setup).SignerCertificate) { throw 'Installer signature missing.' }
+Write-Host "Built: $setup (unsigned: $Unsigned)"
